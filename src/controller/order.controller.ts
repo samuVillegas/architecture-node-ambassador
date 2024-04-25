@@ -8,7 +8,7 @@ import Stripe from "stripe";
 import {client} from "../index";
 import {User} from "../entity/user.entity";
 import {createTransport} from "nodemailer";
-
+import producer from "../config/kafka.config";
 
 export const Orders = async (req: Request, res: Response) => {
     const orders = await getRepository(Order).find({
@@ -103,10 +103,12 @@ export const CreateOrder = async (req: Request, res: Response) => {
 
         res.send(source);
     } catch (e) {
+        
         await queryRunner.rollbackTransaction();
 
         return res.status(400).send({
-            message: 'Error occurred!'
+            message: 'Error occurred!',
+            e
         });
     }
 }
@@ -132,26 +134,22 @@ export const ConfirmOrder = async (req: Request, res: Response) => {
     const user = await getRepository(User).findOne(order.user_id);
 
     await client.zIncrBy('rankings', order.ambassador_revenue, user.name);
-    const transporter = createTransport({
-        host: 'host.docker.internal',
-        port: 1025
-    });
 
-    await transporter.sendMail({
-        from: 'from@example.com',
-        to: 'admin@admin.com',
-        subject: 'An order has been completed',
-        html: `Order #${order.id} with a total of $${order.total} has been completed`
-    });
+    const value = JSON.stringify( {
+        ...order,
+        admin_revenue: order.total,
+        ambassador_revenue: order.ambassador_revenue
+    })
 
-    await transporter.sendMail({
-        from: 'from@example.com',
-        to: order.ambassador_email,
-        subject: 'An order has been completed',
-        html: `You earned $${order.ambassador_revenue} from the link #${order.code}`
+    await producer.connect();
+    await producer.send({
+        topic: 'topic_0',
+        messages: [
+            {
+                value
+            }
+        ]
     });
-
-    await transporter.close();
 
     res.send({
         message: 'success'
