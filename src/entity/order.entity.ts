@@ -17,9 +17,6 @@ export class Order {
     code: string;
 
     @Column()
-    ambassador_email: string;
-
-    @Column()
     first_name: string;
 
     @Column()
