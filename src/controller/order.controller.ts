@@ -30,8 +30,7 @@ export const CreateOrder = async (req: Request, res: Response) => {
   const body = req.body;
 
   const link = await getRepository(Link).findOne({
-    where: { code: body.code },
-    relations: ["user"],
+    where: { code: body.code }
   });
 
   if (!link) {
