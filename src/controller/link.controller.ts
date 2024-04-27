@@ -49,6 +49,6 @@ export const GetLink = async (req: Request, res: Response) => {
         where: {
             code: req.params.code
         },
-        relations: ['user', 'products']
+        relations: ['products']
     }))
 }
