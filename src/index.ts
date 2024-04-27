@@ -9,7 +9,7 @@ import {createClient} from "redis";
 dotenv.config();
 
 export const client = createClient({
-    url: 'redis://redis:6379'
+    url: `redis://${process.env.REDIS_URL}`
 });
 
 createConnection().then(async () => {
@@ -21,7 +21,7 @@ createConnection().then(async () => {
     app.use(express.json());
     app.use(cors({
         credentials: true,
-        origin: ['http://localhost:3000', 'http://localhost:4000', 'http://localhost:5000','http://localhost:3001']
+        origin: ['*']
     }));
 
     routes(app);
